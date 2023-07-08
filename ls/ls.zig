@@ -16,8 +16,12 @@ fn help() !void {
     //try stdout.print("-A . および .. を一覧表示しない\n", .{});
     //try stdout.print("-l use a long listing format\n", .{});
     //try stdout.print("-m -l と併せて使用され、サイズを 1K, 234M, 2Gのような形式で表示する。\n", .{});
+    //try stdout.print("-r ソート順を反転させる\n", .{});
     //try stdout.print("-R 子ディレクトリを再帰的に一覧表示する\n", .{});
+    try stdout.print("-s ブロック単位で各ファイルサイズを表示する\n", .{});
+    //try stdout.print("-S sort by file size, largest first\n", .{});
     //try stdout.print("-t 時刻で新しい順にソートする\n", .{});
+    //try stdout.print("-X 拡張子のアルファベット順にソートする\n", .{});
     try stdout.print("-h ヘルプを表示\n", .{});
     try stdout.print("-v バージョンを表示\n", .{});
 
@@ -60,8 +64,12 @@ pub fn main() !void {
     var isA: bool = false;
     var isl: bool = false;
     var ism: bool = false;
+    var isr: bool = false;
     var isR: bool = false;
+    var iss: bool = false;
+    var isS: bool = false;
     var ist: bool = false;
+    var isX: bool = false;
 
     for (option.items) |i| {
         if (i == 'h') {
@@ -76,19 +84,29 @@ pub fn main() !void {
         if (i == 'A') isA = true;
         if (i == 'l') isl = true;
         if (i == 'm') ism = true;
+        if (i == 'r') isr = true;
         if (i == 'R') isR = true;
+        if (i == 's') iss = true;
+        if (i == 'S') isS = true;
         if (i == 't') ist = true;
+        if (i == 'X') isX = true;
     }
 
     const dir = try fs.cwd().openIterableDir(".", .{});
-    //defer dir.close();
 
-    //var filecnt: usize = 0;
     var iter = dir.iterate();
     var stdout = io.getStdOut().writer();
     while (try iter.next()) |entry| {
-        //if (entry.kind == .File) filecnt += 1;
-        try stdout.print("{s} ", .{entry.name});
+        if (iss) {
+            const BLOCK_SIZE: usize = 4096;
+            var file = try fs.cwd().openFile(entry.name, .{});
+            defer file.close();
+            const stat = try file.stat();
+            const size = stat.size;
+            try stdout.print("{d} {s}\t", .{ size / BLOCK_SIZE, entry.name });
+        } else {
+            try stdout.print("{s}\t", .{entry.name});
+        }
     }
     try stdout.print("\n", .{});
 }
