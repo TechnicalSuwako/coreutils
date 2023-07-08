@@ -1,0 +1,94 @@
+const std = @import("std");
+const fs = std.fs;
+const io = std.io;
+
+const version = "1.0.0";
+
+fn help() !void {
+    const stdof = io.getStdOut().writer();
+    var bw = io.bufferedWriter(stdof);
+    const stdout = bw.writer();
+
+    try stdout.print("076 coreutils\n", .{});
+    try stdout.print("使用法: ls [オプション]... [ファイル]...\n\n", .{});
+    try stdout.print("FILE (デフォルトは現在のディレクトリ) に関する情報を一覧表示します。\n\n", .{});
+    //try stdout.print("-a . で始まる要素を無視しない\n", .{});
+    //try stdout.print("-A . および .. を一覧表示しない\n", .{});
+    //try stdout.print("-l use a long listing format\n", .{});
+    //try stdout.print("-m -l と併せて使用され、サイズを 1K, 234M, 2Gのような形式で表示する。\n", .{});
+    //try stdout.print("-R 子ディレクトリを再帰的に一覧表示する\n", .{});
+    //try stdout.print("-t 時刻で新しい順にソートする\n", .{});
+    try stdout.print("-h ヘルプを表示\n", .{});
+    try stdout.print("-v バージョンを表示\n", .{});
+
+    try bw.flush();
+}
+
+fn ver() !void {
+    const stdof = io.getStdOut().writer();
+    var bw = io.bufferedWriter(stdof);
+    const stdout = bw.writer();
+
+    try stdout.print("ls (076 coreutils) {s}\n", .{version});
+
+    try bw.flush();
+}
+
+pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const alloc = gpa.allocator();
+
+    var option = std.ArrayList(u8).init(alloc);
+    defer option.deinit();
+
+    const args = try std.process.argsAlloc(alloc);
+    defer std.process.argsFree(alloc, args);
+
+    for (args, 0..) |arg, i| {
+        if (i == 0) continue;
+        var m: [1]u8 = [_]u8{'-'};
+        if (std.mem.eql(u8, arg[0..1], m[0..])) {
+            for (arg, 0..) |a, j| {
+                if (j == 0) continue;
+                try option.append(a);
+            }
+        }
+    }
+
+    var isa: bool = false;
+    var isA: bool = false;
+    var isl: bool = false;
+    var ism: bool = false;
+    var isR: bool = false;
+    var ist: bool = false;
+
+    for (option.items) |i| {
+        if (i == 'h') {
+            try help();
+            return;
+        }
+        if (i == 'v') {
+            try ver();
+            return;
+        }
+        if (i == 'a') isa = true;
+        if (i == 'A') isA = true;
+        if (i == 'l') isl = true;
+        if (i == 'm') ism = true;
+        if (i == 'R') isR = true;
+        if (i == 't') ist = true;
+    }
+
+    const dir = try fs.cwd().openIterableDir(".", .{});
+    //defer dir.close();
+
+    //var filecnt: usize = 0;
+    var iter = dir.iterate();
+    var stdout = io.getStdOut().writer();
+    while (try iter.next()) |entry| {
+        //if (entry.kind == .File) filecnt += 1;
+        try stdout.print("{s} ", .{entry.name});
+    }
+    try stdout.print("\n", .{});
+}
