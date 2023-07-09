@@ -2,7 +2,7 @@ const std = @import("std");
 const fs = std.fs;
 const io = std.io;
 
-const version = "1.0.0";
+const version = @import("version.zig").version;
 
 fn help() !void {
     const stdof = io.getStdOut().writer();

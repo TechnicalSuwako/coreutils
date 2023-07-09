@@ -2,7 +2,7 @@ const std = @import("std");
 const fs = std.fs;
 const io = std.io;
 
-const version = "1.0.0";
+const version = @import("version.zig").version;
 
 fn help() !void {
     const stdof = io.getStdOut().writer();
@@ -10,11 +10,10 @@ fn help() !void {
     const stdout = bw.writer();
 
     try stdout.print("076 coreutils\n", .{});
-    try stdout.print("使用法: cat [オプション]... [ファイル]...\n", .{});
-    try stdout.print("ファイル (複数可) の内容を結合して標準出力に出力します。\n\n", .{});
-    try stdout.print("ファイルの指定がない場合や FILE が - の場合, 標準入力から読み込みを行います。\n\n", .{});
-    //try stdout.print("-c 色\n", .{});
-    try stdout.print("-n 全ての行に行番号を付ける\n", .{});
+    try stdout.print("使用法: cp [OPTION]... [-T] SOURCE DEST\n", .{});
+    try stdout.print("または: cp [OPTION]... SOURCE... DIRECTORY\n", .{});
+    try stdout.print("または: cp [OPTION]... -t DIRECTORY SOURCE...\n", .{});
+    try stdout.print("SOURCE から DEST へのコピー、または複数の SOURCE の DIRECTORY へのコピーを行います。\n\n", .{});
     try stdout.print("-h ヘルプを表示\n", .{});
     try stdout.print("-v バージョンを表示\n", .{});
 
@@ -26,7 +25,7 @@ fn ver() !void {
     var bw = io.bufferedWriter(stdof);
     const stdout = bw.writer();
 
-    try stdout.print("cat (076 coreutils) {s}\n", .{version});
+    try stdout.print("cp (076 coreutils) {s}\n", .{version});
 
     try bw.flush();
 }
@@ -58,9 +57,6 @@ pub fn main() !void {
         }
     }
 
-    var iscol: bool = false;
-    var isnum: bool = false;
-
     for (option.items) |i| {
         if (i == 'h') {
             try help();
@@ -70,28 +66,22 @@ pub fn main() !void {
             try ver();
             return;
         }
-        if (i == 'c') {
-            iscol = true;
-        }
-        if (i == 'n') {
-            isnum = true;
-        }
     }
 
-    if (fname.items.len == 0) {
+    if (fname.items.len != 2) {
         try help();
         return;
     }
 
-    for (fname.items) |item| {
-        const file = try fs.cwd().openFile(item, .{});
-        defer file.close();
+    const in = try fs.cwd().openFile(fname.items[0], .{});
+    defer in.close();
+    const out = try fs.cwd().createFile(fname.items[1], .{ .read = true });
+    defer out.close();
 
-        var buf: [1024]u8 = undefined;
-        while (true) {
-            const br = try file.read(buf[0..]);
-            if (br == 0) break;
-            try io.getStdOut().writer().writeAll(buf[0..br]);
-        }
+    var buf: [1024]u8 = undefined;
+    while (true) {
+        const br = try in.read(buf[0..]);
+        if (br == 0) break;
+        try out.writeAll(buf[0..br]);
     }
 }

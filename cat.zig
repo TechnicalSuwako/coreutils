@@ -2,7 +2,7 @@ const std = @import("std");
 const fs = std.fs;
 const io = std.io;
 
-const version = "1.0.0";
+const version = @import("version.zig").version;
 
 fn help() !void {
     const stdof = io.getStdOut().writer();
@@ -10,9 +10,11 @@ fn help() !void {
     const stdout = bw.writer();
 
     try stdout.print("076 coreutils\n", .{});
-    try stdout.print("使用法: mkdir [OPTION]... DIRECTORY...\n", .{});
-    try stdout.print("ディレクトリが存在しない場合に、ディレクトリを作成します。\n\n", .{});
-    try stdout.print("-p ディレクトリが存在していてもエラーを返さない。\n   必要に応じて親ディレクトリを作成する。\n", .{});
+    try stdout.print("使用法: cat [オプション]... [ファイル]...\n", .{});
+    try stdout.print("ファイル (複数可) の内容を結合して標準出力に出力します。\n\n", .{});
+    try stdout.print("ファイルの指定がない場合や FILE が - の場合, 標準入力から読み込みを行います。\n\n", .{});
+    //try stdout.print("-c 色\n", .{});
+    try stdout.print("-n 全ての行に行番号を付ける\n", .{});
     try stdout.print("-h ヘルプを表示\n", .{});
     try stdout.print("-v バージョンを表示\n", .{});
 
@@ -24,7 +26,7 @@ fn ver() !void {
     var bw = io.bufferedWriter(stdof);
     const stdout = bw.writer();
 
-    try stdout.print("mkdir (076 coreutils) {s}\n", .{version});
+    try stdout.print("cat (076 coreutils) {s}\n", .{version});
 
     try bw.flush();
 }
@@ -56,7 +58,8 @@ pub fn main() !void {
         }
     }
 
-    var isoya: bool = false;
+    var iscol: bool = false;
+    var isnum: bool = false;
 
     for (option.items) |i| {
         if (i == 'h') {
@@ -67,8 +70,11 @@ pub fn main() !void {
             try ver();
             return;
         }
-        if (i == 'p') {
-            isoya = true;
+        if (i == 'c') {
+            iscol = true;
+        }
+        if (i == 'n') {
+            isnum = true;
         }
     }
 
@@ -78,22 +84,14 @@ pub fn main() !void {
     }
 
     for (fname.items) |item| {
-        if (isoya) {
-            var tmp_path = std.ArrayList(u8).init(alloc);
-            defer tmp_path.deinit();
+        const file = try fs.cwd().openFile(item, .{});
+        defer file.close();
 
-            var it = std.mem.split(u8, item, "/");
-            while (it.next()) |comp| {
-                _ = try tmp_path.appendSlice(comp);
-                _ = try tmp_path.append('/');
-                const tmp_path_str = tmp_path.items;
-                _ = fs.cwd().makeDir(tmp_path_str) catch |err| switch (err) {
-                    error.PathAlreadyExists => {},
-                    else => |e| return e,
-                };
-            }
-        } else {
-            try fs.cwd().makeDir(item);
+        var buf: [1024]u8 = undefined;
+        while (true) {
+            const br = try file.read(buf[0..]);
+            if (br == 0) break;
+            try io.getStdOut().writer().writeAll(buf[0..br]);
         }
     }
 }

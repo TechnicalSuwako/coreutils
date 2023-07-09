@@ -2,7 +2,7 @@ const std = @import("std");
 const fs = std.fs;
 const io = std.io;
 
-const version = "1.0.0";
+const version = @import("version.zig").version;
 
 fn help() !void {
     const stdof = io.getStdOut().writer();
@@ -10,10 +10,9 @@ fn help() !void {
     const stdout = bw.writer();
 
     try stdout.print("076 coreutils\n", .{});
-    try stdout.print("使用法: cp [OPTION]... [-T] SOURCE DEST\n", .{});
-    try stdout.print("または: cp [OPTION]... SOURCE... DIRECTORY\n", .{});
-    try stdout.print("または: cp [OPTION]... -t DIRECTORY SOURCE...\n", .{});
-    try stdout.print("SOURCE から DEST へのコピー、または複数の SOURCE の DIRECTORY へのコピーを行います。\n\n", .{});
+    try stdout.print("使用法: mkdir [OPTION]... DIRECTORY...\n", .{});
+    try stdout.print("ディレクトリが存在しない場合に、ディレクトリを作成します。\n\n", .{});
+    try stdout.print("-p ディレクトリが存在していてもエラーを返さない。\n   必要に応じて親ディレクトリを作成する。\n", .{});
     try stdout.print("-h ヘルプを表示\n", .{});
     try stdout.print("-v バージョンを表示\n", .{});
 
@@ -25,7 +24,7 @@ fn ver() !void {
     var bw = io.bufferedWriter(stdof);
     const stdout = bw.writer();
 
-    try stdout.print("cp (076 coreutils) {s}\n", .{version});
+    try stdout.print("mkdir (076 coreutils) {s}\n", .{version});
 
     try bw.flush();
 }
@@ -57,6 +56,8 @@ pub fn main() !void {
         }
     }
 
+    var isoya: bool = false;
+
     for (option.items) |i| {
         if (i == 'h') {
             try help();
@@ -66,22 +67,33 @@ pub fn main() !void {
             try ver();
             return;
         }
+        if (i == 'p') {
+            isoya = true;
+        }
     }
 
-    if (fname.items.len != 2) {
+    if (fname.items.len == 0) {
         try help();
         return;
     }
 
-    const in = try fs.cwd().openFile(fname.items[0], .{});
-    defer in.close();
-    const out = try fs.cwd().createFile(fname.items[1], .{ .read = true });
-    defer out.close();
+    for (fname.items) |item| {
+        if (isoya) {
+            var tmp_path = std.ArrayList(u8).init(alloc);
+            defer tmp_path.deinit();
 
-    var buf: [1024]u8 = undefined;
-    while (true) {
-        const br = try in.read(buf[0..]);
-        if (br == 0) break;
-        try out.writeAll(buf[0..br]);
+            var it = std.mem.split(u8, item, "/");
+            while (it.next()) |comp| {
+                _ = try tmp_path.appendSlice(comp);
+                _ = try tmp_path.append('/');
+                const tmp_path_str = tmp_path.items;
+                _ = fs.cwd().makeDir(tmp_path_str) catch |err| switch (err) {
+                    error.PathAlreadyExists => {},
+                    else => |e| return e,
+                };
+            }
+        } else {
+            try fs.cwd().makeDir(item);
+        }
     }
 }

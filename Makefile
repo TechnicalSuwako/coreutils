@@ -1,33 +1,20 @@
 NAME=coreutils
-VERSION=0.0.1
+VERSION := $(shell cat version.zig | grep "pub const version" | awk '{print $$5}' | sed "s/\"//g" | sed "s/;//")
 PREFIX=/usr
 MANPREFIX=${PREFIX}/share/man
+PROG=cat cp ls mkdir pwd rm touch
+CC=zig build-exe
+RELEASE=ReleaseSmall
 
-all:
-	mkdir bin
-	cd cat && make && mv cat ../bin && rm -rf cat.o && cd ..
-	cd cp && make && mv cp ../bin && rm -rf cp.o && cd ..
-	cd ls && make && mv ls ../bin && rm -rf ls.o && cd ..
-	cd mkdir && make && mv mkdir ../bin && rm -rf mkdir.o && cd ..
-	cd pwd && make && mv pwd ../bin && rm -rf pwd.o && cd ..
-	cd rm && make && mv rm ../bin && rm -rf rm.o && cd ..
-	cd touch && make && mv touch ../bin && rm -rf touch.o && cd ..
+all: ${PROG}
+
+%: %.zig
+	mkdir -p bin
+	${CC} $< -O ${RELEASE} --name $@
+	mv $@ bin
+	mv $@.o bin
 
 clean:
-	rm -rf bin
+	rm -rf bin/${PROG}
 
-install: all
-	mkdir -p ${DESTDIR}${PREFIX}/bin
-	cp -f bin/* ${DESTDIR}${PREFIX}/bin
-	chmod 755 ${DESTDIR}${PREFIX}/bin/cat
-	chmod 755 ${DESTDIR}${PREFIX}/bin/cp
-	chmod 755 ${DESTDIR}${PREFIX}/bin/ls
-	chmod 755 ${DESTDIR}${PREFIX}/bin/mkdir
-	chmod 755 ${DESTDIR}${PREFIX}/bin/pwd
-	chmod 755 ${DESTDIR}${PREFIX}/bin/rm
-	chmod 755 ${DESTDIR}${PREFIX}/bin/touch
-	#mkdir -p ${DESTDIR}${MANPREFIX}/man1
-	#sed "s/VERSION/${VERSION}/g" < ${NAME}.1 > ${DESTDIR}${MANPREFIX}/man1/${NAME}.1
-	#chmod 644 ${DESTDIR}${MANPREFIX}/man1/${NAME}.1
-
-.PHONY: all clean dist install
+.PHONY: all clean

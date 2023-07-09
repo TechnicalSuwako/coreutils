@@ -1,4 +1,3 @@
-*
-!/*
-!/**/Makefile
-!/**/*.zig
+*.o
+*.tar.gz
+/bin
