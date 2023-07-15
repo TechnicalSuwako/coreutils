@@ -78,21 +78,11 @@ pub fn main() !void {
             try ver();
             return;
         }
-        if (i == 'b') {
-            isnun = true;
-        }
-        if (i == 'c') {
-            iscol = true;
-        }
-        if (i == 'd') {
-            isone = true;
-        }
-        if (i == 'n') {
-            isnum = true;
-        }
-        if (i == 's') {
-            issqz = true;
-        }
+        if (i == 'b') isnun = true;
+        if (i == 'c') iscol = true;
+        if (i == 'd') isone = true;
+        if (i == 'n') isnum = true;
+        if (i == 's') issqz = true;
     }
 
     if (fname.items.len == 0) {
