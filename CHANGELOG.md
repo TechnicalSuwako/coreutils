@@ -1,8 +1,11 @@
 # 0.0.1
 * catを追加
 * cpを追加
+* echoを追加（完了）
+* groupsを追加（完了）
 * lsを追加
 * mkdirを追加（完了）
 * pwdを追加（完了）
 * rmを追加（完了）
 * touchを追加
+* whoamiを追加（完了）
