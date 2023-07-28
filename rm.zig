@@ -102,7 +102,7 @@ pub fn main() !void {
             defer file.close();
             const stat = try file.stat();
 
-            if (stat.kind != .File) {
+            if (stat.kind != .file) {
                 if (isrecur) {
                     if (ischeck) {
                         try stdout.print("rm: ディレクトリ '{s}' を削除しますか?\n", .{item});

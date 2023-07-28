@@ -51,7 +51,7 @@ pub fn main() !void {
                 try option.append(a);
             }
         } else {
-            const length = std.math.min(arg.len, username.len - 1);
+            const length = @min(arg.len, username.len - 1);
             mem.copy(u8, username[0..length], arg[0..length]);
             username[length] = 0;
         }
