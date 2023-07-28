@@ -2,7 +2,7 @@ NAME=coreutils
 VERSION := $(shell cat version.zig | grep "pub const version" | awk '{print $$5}' | sed "s/\"//g" | sed "s/;//")
 PREFIX=/usr
 MANPREFIX=${PREFIX}/share/man
-PROG=cat cp ls mkdir pwd rm touch
+PROG=cat cp echo false groups ls mkdir pwd rm touch true wc whoami
 CC=zig build-exe
 RELEASE=ReleaseSmall
 
@@ -14,7 +14,21 @@ all: ${PROG}
 	mv $@ bin
 	mv $@.o bin
 
+loc-install: all
+	mkdir -p ~/.local/bin
+	for prog in ${PROG}; do \
+		cp bin/$$prog ~/.local/bin; \
+		chmod +x ~/.local/bin/$$prog; \
+	done
+
+sys-install: all
+	mkdir -p ${PREFIX}/bin
+	for prog in ${PROG}; do \
+		cp bin/$$prog ${PREFIX}/bin; \
+		chmod +x ${PREFIX}/bin/$$prog; \
+	done
+
 clean:
 	rm -rf bin/${PROG}
 
-.PHONY: all clean
+.PHONY: all loc-install sys-install clean
