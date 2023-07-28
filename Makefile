@@ -2,7 +2,7 @@ NAME=coreutils
 VERSION := $(shell cat version.zig | grep "pub const version" | awk '{print $$5}' | sed "s/\"//g" | sed "s/;//")
 PREFIX=/usr
 MANPREFIX=${PREFIX}/share/man
-PROG=cat cp echo false groups ls mkdir pwd rm touch true wc whoami
+PROG=basename cat cp dirname echo false groups ls mkdir pwd rm touch true wc whoami
 CC=zig build-exe
 RELEASE=ReleaseSmall
 

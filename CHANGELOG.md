@@ -12,3 +12,5 @@
 * trueを追加（完了）
 * falseを追加（完了）
 * wcを追加（完了）
+* basenameを追加（完了）
+* dirnameを追加（完了）
