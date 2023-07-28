@@ -14,7 +14,6 @@ fn help() !void {
     try stdout.print("ファイル (複数可) の内容を結合して標準出力に出力します。\n\n", .{});
     try stdout.print("ファイルの指定がない場合や FILE が - の場合, 標準入力から読み込みを行います。\n\n", .{});
     try stdout.print("-b カッコの行列以外、全ての行に行番号を付ける\n", .{});
-    //try stdout.print("-c 色\n", .{});
     try stdout.print("-d 全部は１行列に表示する\n", .{});
     try stdout.print("-n 全ての行に行番号を付ける\n", .{});
     try stdout.print("-s カッコの行列を見逃す\n", .{});
