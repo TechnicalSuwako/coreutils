@@ -1,4 +1,5 @@
 const std = @import("std");
+const toki = @import("libtoki/src/main.zig");
 const fs = std.fs;
 const io = std.io;
 
@@ -14,7 +15,7 @@ fn help() !void {
     try stdout.print("FILE (デフォルトは現在のディレクトリ) に関する情報を一覧表示します。\n\n", .{});
     //try stdout.print("-a . で始まる要素を無視しない\n", .{});
     //try stdout.print("-A . および .. を一覧表示しない\n", .{});
-    //try stdout.print("-l use a long listing format\n", .{});
+    try stdout.print("-l use a long listing format\n", .{});
     //try stdout.print("-m -l と併せて使用され、サイズを 1K, 234M, 2Gのような形式で表示する。\n", .{});
     //try stdout.print("-r ソート順を反転させる\n", .{});
     //try stdout.print("-R 子ディレクトリを再帰的に一覧表示する\n", .{});
@@ -86,6 +87,10 @@ pub fn main() !void {
 
     var iter = dir.iterate();
     var stdout = io.getStdOut().writer();
+    if (isl) {
+        //try stdout.print("許可\tオーナー\tグループ\t", .{});
+        try stdout.print("サイズ\t変更日 (GMT)\t\tファイル名\n", .{});
+    }
 
     while (try iter.next()) |entry| {
         if (iss) {
@@ -95,6 +100,25 @@ pub fn main() !void {
             const stat = try file.stat();
             const size = stat.size;
             try stdout.print("{d} {s}\t", .{ size / BLOCK_SIZE, entry.name });
+        } else if (isl) {
+            var file = try fs.cwd().openFile(entry.name, .{});
+            defer file.close();
+            var stats = try file.stat();
+            std.debug.print("stat: {}\n", .{stats});
+            var t = stats.mtime;
+            const unix = toki.nanoToSecond(@intCast(t));
+            const dt = toki.unixToDateTime(unix);
+
+            try stdout.print("{d}\t{d}-{s}-{s} {s}:{s}:{s}\t{s}\n", .{
+                stats.size,
+                dt.year,
+                toki.fmtDigit(@intCast(dt.month)),
+                toki.fmtDigit(@intCast(dt.day)),
+                toki.fmtDigit(@intCast(dt.hour)),
+                toki.fmtDigit(@intCast(dt.minute)),
+                toki.fmtDigit(@intCast(dt.second)),
+                entry.name,
+            });
         } else {
             try stdout.print("{s}\t", .{entry.name});
         }
