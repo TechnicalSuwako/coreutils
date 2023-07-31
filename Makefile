@@ -1,5 +1,5 @@
 NAME=coreutils
-VERSION := $(shell cat version.zig | grep "pub const version" | awk '{print $$5}' | sed "s/\"//g" | sed "s/;//")
+VERSION := $(shell cat version.zig | grep "const version" | awk '{print $$4}' | sed "s/\"//g" | sed "s/;//")
 PREFIX=/usr
 MANPREFIX=${PREFIX}/share/man
 PROG=basename cat cp dirname echo false groups ls mkdir pwd rm touch true wc whoami

@@ -1,6 +1,6 @@
 * [ ] awk
-* [ ] basename
-* [-] cat
+* [x] basename
+* [x] cat
 * [ ] chmod
 * [ ] chown
 * [ ] cksum
@@ -9,11 +9,13 @@
 * [ ] dd
 * [ ] df
 * [ ] diff
+* [x] dirname
 * [ ] du
-* [ ] echo
+* [x] echo
 * [ ] env
+* [x] false
 * [ ] grep
-* [ ] groups
+* [x] groups
 * [ ] head
 * [ ] hostid
 * [ ] hostname
@@ -58,6 +60,7 @@
 * [ ] timeout
 * [-] touch
 * [ ] tr
+* [x] true
 * [ ] truncate
 * [ ] tsort
 * [ ] tty
@@ -68,6 +71,6 @@
 * [ ] uptime
 * [ ] users
 * [ ] vdir
-* [ ] wc
+* [x] wc
 * [ ] who
-* [ ] whoami
+* [x] whoami

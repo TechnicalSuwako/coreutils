@@ -1,0 +1,3 @@
+[submodule "libtoki"]
+	path = libtoki
+	url = https://gitler.moe/suwako/libtoki

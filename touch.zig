@@ -2,7 +2,7 @@ const std = @import("std");
 const fs = std.fs;
 const io = std.io;
 
-const version = @import("version.zig").version;
+const version = @import("version.zig");
 
 fn help() !void {
     const stdof = io.getStdOut().writer();
@@ -19,16 +19,6 @@ fn help() !void {
     //try stdout.print("-m 変更日時のみ変更する\n", .{});
     try stdout.print("-h ヘルプを表示\n", .{});
     try stdout.print("-v バージョンを表示\n", .{});
-
-    try bw.flush();
-}
-
-fn ver() !void {
-    const stdof = io.getStdOut().writer();
-    var bw = io.bufferedWriter(stdof);
-    const stdout = bw.writer();
-
-    try stdout.print("touch (076 coreutils) {s}\n", .{version});
 
     try bw.flush();
 }
@@ -67,7 +57,7 @@ pub fn main() !void {
             return;
         }
         if (i == 'v') {
-            try ver();
+            try version.ver("touch");
             return;
         }
         if (i == 'c') {

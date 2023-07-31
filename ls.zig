@@ -2,7 +2,7 @@ const std = @import("std");
 const fs = std.fs;
 const io = std.io;
 
-const version = @import("version.zig").version;
+const version = @import("version.zig");
 
 fn help() !void {
     const stdof = io.getStdOut().writer();
@@ -24,16 +24,6 @@ fn help() !void {
     //try stdout.print("-X 拡張子のアルファベット順にソートする\n", .{});
     try stdout.print("-h ヘルプを表示\n", .{});
     try stdout.print("-v バージョンを表示\n", .{});
-
-    try bw.flush();
-}
-
-fn ver() !void {
-    const stdof = io.getStdOut().writer();
-    var bw = io.bufferedWriter(stdof);
-    const stdout = bw.writer();
-
-    try stdout.print("ls (076 coreutils) {s}\n", .{version});
 
     try bw.flush();
 }
@@ -77,7 +67,7 @@ pub fn main() !void {
             return;
         }
         if (i == 'v') {
-            try ver();
+            try version.ver("ls");
             return;
         }
         if (i == 'a') isa = true;
@@ -96,6 +86,7 @@ pub fn main() !void {
 
     var iter = dir.iterate();
     var stdout = io.getStdOut().writer();
+
     while (try iter.next()) |entry| {
         if (iss) {
             const BLOCK_SIZE: usize = 4096;
