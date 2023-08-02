@@ -9,6 +9,26 @@
 * Zig 0.11.0-dev.3277+a0652fb93以上
 * 良いOS (GNU/Linux、OpenBSD、又はFreeBSD)
 
+## デバッグ
+
 ```sh
-zig build
+zig build -Doptimize=Debug
+```
+
+## リリース（小さい）
+
+```sh
+zig build -Doptimize=ReleaseSmall
+```
+
+## リリース（安全）
+
+```sh
+zig build -Doptimize=ReleaseSafe
+```
+
+## リリース（速い）
+
+```sh
+zig build -Doptimize=ReleaseFast
 ```
