@@ -10,6 +10,5 @@
 * 良いOS (GNU/Linux、OpenBSD、又はFreeBSD)
 
 ```sh
-make
-doas make install
+zig build
 ```
