@@ -1,0 +1,10 @@
+.{
+  .name = "coreutils",
+  .version = "0.0.1",
+  .dependencies = .{
+    .toki = .{
+      .url = "https://gitler.moe/suwako/libtoki/archive/libtoki-1.0.0.tar.gz",
+      .hash = "1220e9fede6780ed0670d20142363be9f6deb412a9df2ddbec1713c563c6b924fa7b",
+    },
+  }
+}

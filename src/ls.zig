@@ -1,5 +1,5 @@
 const std = @import("std");
-const toki = @import("libtoki/src/main.zig");
+const toki = @import("toki");
 const fs = std.fs;
 const io = std.io;
 

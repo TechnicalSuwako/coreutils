@@ -1,3 +1,2 @@
-*.o
-*.tar.gz
-/bin
+/zig-out
+/zig-cache
