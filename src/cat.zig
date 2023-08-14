@@ -75,33 +75,41 @@ pub fn main() !void {
     }
 
     if (fname.items.len == 0) {
-        try help();
-        return;
-    }
-
-    for (fname.items) |item| {
-        const file = try fs.cwd().openFile(item, .{});
-        defer file.close();
-
-        var buf: [1024]u8 = undefined;
+        const stdin = io.getStdIn().reader();
+        var buf: [2048]u8 = undefined;
         while (true) {
-            const result = try file.reader().readUntilDelimiterOrEof(buf[0..], '\n') orelse break;
-            if (issqz and std.mem.trimRight(u8, result, "\n\r").len == 0) continue;
-            const stripped = std.mem.trim(u8, result, " \n\t\r");
+            const lne = try stdin.read(buf[0..]);
+            if (lne == 0) {
+                break;
+            }
 
-            if (isone) {
-                try io.getStdOut().writer().writeAll(stripped);
-            } else {
-                if (isnum or (isnun and stripped.len != 0)) {
-                    line_number += 1;
-                    try io.getStdOut().writer().print("  {:3} | ", .{line_number});
-                } else if (isnum) {
-                    line_number += 1;
-                    try io.getStdOut().writer().print("  {:3} | ", .{line_number});
+            try io.getStdOut().writer().writeAll(buf[0..lne]);
+        }
+    } else {
+        for (fname.items) |item| {
+            const file = try fs.cwd().openFile(item, .{});
+            defer file.close();
+
+            var buf: [1024]u8 = undefined;
+            while (true) {
+                const result = try file.reader().readUntilDelimiterOrEof(buf[0..], '\n') orelse break;
+                if (issqz and std.mem.trimRight(u8, result, "\n\r").len == 0) continue;
+                const stripped = std.mem.trim(u8, result, " \n\t\r");
+
+                if (isone) {
+                    try io.getStdOut().writer().writeAll(stripped);
+                } else {
+                    if (isnum or (isnun and stripped.len != 0)) {
+                        line_number += 1;
+                        try io.getStdOut().writer().print("  {:3} | ", .{line_number});
+                    } else if (isnum) {
+                        line_number += 1;
+                        try io.getStdOut().writer().print("  {:3} | ", .{line_number});
+                    }
+
+                    try io.getStdOut().writer().writeAll(result);
+                    try io.getStdOut().writer().print("\n", .{});
                 }
-
-                try io.getStdOut().writer().writeAll(result);
-                try io.getStdOut().writer().print("\n", .{});
             }
         }
     }
