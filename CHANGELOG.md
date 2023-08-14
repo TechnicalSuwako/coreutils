@@ -14,3 +14,4 @@
 * wcを追加（完了）
 * basenameを追加（完了）
 * dirnameを追加（完了）
+* killを追加（完了）

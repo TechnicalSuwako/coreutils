@@ -1,6 +1,7 @@
 * [ ] awk
 * [x] basename
 * [x] cat
+* [ ] cd
 * [ ] chmod
 * [ ] chown
 * [ ] cksum
@@ -21,7 +22,7 @@
 * [ ] hostname
 * [ ] id
 * [ ] install
-* [ ] kill
+* [x] kill
 * [ ] ln
 * [-] ls
 * [ ] md5sum

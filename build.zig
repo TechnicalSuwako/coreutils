@@ -30,6 +30,9 @@ pub fn build(b: *std.Build) !void {
     const bin_groups = b.addExecutable(.{ .name = "groups", .root_source_file = .{ .path = "src/groups.zig" }, .target = target, .optimize = optimize });
     b.installArtifact(bin_groups);
 
+    const bin_kill = b.addExecutable(.{ .name = "kill", .root_source_file = .{ .path = "src/kill.zig" }, .target = target, .optimize = optimize });
+    b.installArtifact(bin_kill);
+
     const bin_ls = b.addExecutable(.{ .name = "ls", .root_source_file = .{ .path = "src/ls.zig" }, .target = target, .optimize = optimize });
     bin_ls.addModule("toki", lib_toki.module("toki"));
     bin_ls.linkLibrary(lib_toki.artifact("toki"));
