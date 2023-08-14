@@ -87,28 +87,50 @@ pub fn main() !void {
         }
     } else {
         for (fname.items) |item| {
-            const file = try fs.cwd().openFile(item, .{});
-            defer file.close();
+            const file = fs.cwd().openFile(item, .{});
+            if (file) |f| {
+                defer f.close();
+                const stat = try f.stat();
+                if (stat.kind == .directory) {
+                    std.debug.print("'{s}' はディレクトリです。\n", .{item});
+                    continue;
+                }
 
-            var buf: [1024]u8 = undefined;
-            while (true) {
-                const result = try file.reader().readUntilDelimiterOrEof(buf[0..], '\n') orelse break;
-                if (issqz and std.mem.trimRight(u8, result, "\n\r").len == 0) continue;
-                const stripped = std.mem.trim(u8, result, " \n\t\r");
+                var buf: [1024]u8 = undefined;
+                while (true) {
+                    const result = try f.reader().readUntilDelimiterOrEof(buf[0..], '\n') orelse break;
+                    if (issqz and std.mem.trimRight(u8, result, "\n\r").len == 0) continue;
+                    const stripped = std.mem.trim(u8, result, " \n\t\r");
 
-                if (isone) {
-                    try io.getStdOut().writer().writeAll(stripped);
-                } else {
-                    if (isnum or (isnun and stripped.len != 0)) {
-                        line_number += 1;
-                        try io.getStdOut().writer().print("  {:3} | ", .{line_number});
-                    } else if (isnum) {
-                        line_number += 1;
-                        try io.getStdOut().writer().print("  {:3} | ", .{line_number});
+                    if (isone) {
+                        try io.getStdOut().writer().writeAll(stripped);
+                    } else {
+                        if (isnum or (isnun and stripped.len != 0)) {
+                            line_number += 1;
+                            try io.getStdOut().writer().print("  {:3} | ", .{line_number});
+                        } else if (isnum) {
+                            line_number += 1;
+                            try io.getStdOut().writer().print("  {:3} | ", .{line_number});
+                        }
+
+                        try io.getStdOut().writer().writeAll(result);
+                        try io.getStdOut().writer().print("\n", .{});
                     }
-
-                    try io.getStdOut().writer().writeAll(result);
-                    try io.getStdOut().writer().print("\n", .{});
+                }
+            } else |err| {
+                switch (err) {
+                    error.FileNotFound => {
+                        std.debug.print("ファイルを見つけられません。\n", .{});
+                        break;
+                    },
+                    error.AccessDenied => {
+                        std.debug.print("アクセスに出来ません。\n", .{});
+                        break;
+                    },
+                    else => {
+                        std.debug.print("エラー。\n", .{});
+                        break;
+                    },
                 }
             }
         }
