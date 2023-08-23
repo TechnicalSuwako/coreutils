@@ -61,7 +61,6 @@ pub fn main() !void {
     var ischar: bool = false;
     var isword: bool = false;
     var isnhed: bool = false;
-    var iAmWord: bool = false;
     var byte_cunt: usize = 0;
     var line_cunt: usize = 0;
     var char_cunt: usize = 0;
@@ -105,9 +104,9 @@ pub fn main() !void {
         }
     }
 
+    const stdin = io.getStdIn().reader();
     if (fname.items.len == 0) {
         // -l -c -m
-        const stdin = io.getStdIn().reader();
         var buf: [2048]u8 = undefined;
         while (true) {
             const lne = try stdin.read(buf[0..]);
@@ -125,14 +124,13 @@ pub fn main() !void {
             byte_cunt += lne;
 
             // -w
+            var insideWord: bool = false;
             for (buf[0..lne]) |char| {
-                if (std.ascii.isAlphanumeric(char) or char == '_' or char == '-' or char == '\'' or char == '~' or char == '&') {
-                    if (!iAmWord) {
-                        iAmWord = true;
-                        word_cunt += 1;
-                    }
-                } else {
-                    iAmWord = false;
+                if (std.ascii.isWhitespace(char)) {
+                    insideWord = false;
+                } else if (!insideWord) {
+                    insideWord = true;
+                    word_cunt += 1;
                 }
             }
         }
@@ -160,21 +158,28 @@ pub fn main() !void {
             // -l -c -m
             var buf: [2048]u8 = undefined;
             while (true) {
-                const lne = try file.reader().readUntilDelimiterOrEof(buf[0..], '\n') orelse break;
-                const chr = try std.unicode.utf8CountCodepoints(lne);
-                line_cunt += 1;
+                const lne = try stdin.read(buf[0..]);
+                if (lne == 0) {
+                    break;
+                }
+
+                const chr = try std.unicode.utf8CountCodepoints(buf[0..lne]);
+                for (buf[0..lne]) |char| {
+                    if (char == '\n') {
+                        line_cunt += 1;
+                    }
+                }
                 char_cunt += chr;
-                byte_cunt += lne.len;
+                byte_cunt += lne;
 
                 // -w
-                for (lne) |char| {
-                    if (std.ascii.isAlphanumeric(char) or char == '_' or char == '-' or char == '\'' or char == '~' or char == '&') {
-                        if (!iAmWord) {
-                            iAmWord = true;
-                            word_cunt += 1;
-                        }
-                    } else {
-                        iAmWord = false;
+                var insideWord: bool = false;
+                for (buf[0..lne]) |char| {
+                    if (std.ascii.isWhitespace(char)) {
+                        insideWord = false;
+                    } else if (!insideWord) {
+                        insideWord = true;
+                        word_cunt += 1;
                     }
                 }
             }
