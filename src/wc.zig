@@ -4,6 +4,14 @@ const io = std.io;
 
 const version = @import("version.zig");
 
+const Option = struct {
+    isbyte: bool,
+    isline: bool,
+    ischar: bool,
+    isword: bool,
+    isnhed: bool,
+};
+
 fn help() !void {
     const stdof = io.getStdOut().writer();
     var bw = io.bufferedWriter(stdof);
@@ -29,13 +37,61 @@ fn help() !void {
     try bw.flush();
 }
 
+fn cuntchar(reader: anytype) !struct {
+    byte_cunt: usize,
+    line_cunt: usize,
+    char_cunt: usize,
+    word_cunt: usize,
+} {
+    var byte_cunt: usize = 0;
+    var line_cunt: usize = 0;
+    var char_cunt: usize = 0;
+    var word_cunt: usize = 0;
+
+    // -l -c -m
+    var buf: [2048]u8 = undefined;
+    while (true) {
+        const lne = try reader.read(buf[0..]);
+        if (lne == 0) {
+            break;
+        }
+
+        const chr = try std.unicode.utf8CountCodepoints(buf[0..lne]);
+        for (buf[0..lne]) |char| {
+            if (char == '\n') {
+                line_cunt += 1;
+            }
+        }
+        char_cunt += chr;
+        byte_cunt += lne;
+
+        // -w
+        var insideWord: bool = false;
+        for (buf[0..lne]) |char| {
+            if (std.ascii.isWhitespace(char)) {
+                insideWord = false;
+            } else if (!insideWord) {
+                insideWord = true;
+                word_cunt += 1;
+            }
+        }
+    }
+
+    return .{
+        .byte_cunt = byte_cunt,
+        .line_cunt = line_cunt,
+        .char_cunt = char_cunt,
+        .word_cunt = word_cunt,
+    };
+}
+
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
     const alloc = gpa.allocator();
 
-    var option = std.ArrayList(u8).init(alloc);
-    defer option.deinit();
+    var opt = std.ArrayList(u8).init(alloc);
+    defer opt.deinit();
 
     var fname = std.ArrayList([]const u8).init(alloc);
     defer fname.deinit();
@@ -49,28 +105,27 @@ pub fn main() !void {
         if (std.mem.eql(u8, arg[0..1], m[0..])) {
             for (arg, 0..) |a, j| {
                 if (j == 0) continue;
-                try option.append(a);
+                try opt.append(a);
             }
         } else {
             try fname.append(arg);
         }
     }
 
-    var isbyte: bool = false;
-    var isline: bool = false;
-    var ischar: bool = false;
-    var isword: bool = false;
-    var isnhed: bool = false;
-    var byte_cunt: usize = 0;
-    var line_cunt: usize = 0;
-    var char_cunt: usize = 0;
-    var word_cunt: usize = 0;
+    var option = Option{
+        .isbyte = false,
+        .isline = false,
+        .ischar = false,
+        .isword = false,
+        .isnhed = false,
+    };
+
     var byte_cuntt: usize = 0;
     var line_cuntt: usize = 0;
     var char_cuntt: usize = 0;
     var word_cuntt: usize = 0;
 
-    for (option.items) |i| {
+    for (opt.items) |i| {
         if (i == 'h') {
             try help();
             return;
@@ -79,25 +134,25 @@ pub fn main() !void {
             try version.ver("wc");
             return;
         }
-        if (i == 'c') isbyte = true;
-        if (i == 'l') isline = true;
-        if (i == 'm') ischar = true;
-        if (i == 'n') isnhed = true;
-        if (i == 'w') isword = true;
+        if (i == 'c') option.isbyte = true;
+        if (i == 'l') option.isline = true;
+        if (i == 'm') option.ischar = true;
+        if (i == 'n') option.isnhed = true;
+        if (i == 'w') option.isword = true;
     }
 
     const stdof = io.getStdOut().writer();
     var bw = io.bufferedWriter(stdof);
     const stdout = bw.writer();
 
-    if (!isnhed) {
-        if (isline) {
+    if (!option.isnhed) {
+        if (option.isline) {
             try stdout.print("改行数\tファル名\n", .{});
-        } else if (isword) {
+        } else if (option.isword) {
             try stdout.print("単語数\tファル名\n", .{});
-        } else if (ischar) {
+        } else if (option.ischar) {
             try stdout.print("文字数\tファル名\n", .{});
-        } else if (isbyte) {
+        } else if (option.isbyte) {
             try stdout.print("バイト数\tファル名\n", .{});
         } else {
             try stdout.print("改行数\t単語数\t文字数\tバイト数\tファル名\n", .{});
@@ -106,109 +161,51 @@ pub fn main() !void {
 
     const stdin = io.getStdIn().reader();
     if (fname.items.len == 0) {
-        // -l -c -m
-        var buf: [2048]u8 = undefined;
-        while (true) {
-            const lne = try stdin.read(buf[0..]);
-            if (lne == 0) {
-                break;
-            }
+        const cnt = try cuntchar(stdin);
 
-            const chr = try std.unicode.utf8CountCodepoints(buf[0..lne]);
-            for (buf[0..lne]) |char| {
-                if (char == '\n') {
-                    line_cunt += 1;
-                }
-            }
-            char_cunt += chr;
-            byte_cunt += lne;
-
-            // -w
-            var insideWord: bool = false;
-            for (buf[0..lne]) |char| {
-                if (std.ascii.isWhitespace(char)) {
-                    insideWord = false;
-                } else if (!insideWord) {
-                    insideWord = true;
-                    word_cunt += 1;
-                }
-            }
-        }
-
-        if (isline) {
-            try stdout.print("{d}\n", .{line_cunt});
-        } else if (isword) {
-            try stdout.print("{d}\n", .{word_cunt});
-        } else if (ischar) {
-            try stdout.print("{d}\n", .{char_cunt});
-        } else if (isbyte) {
-            try stdout.print("{d}\n", .{byte_cunt});
+        if (option.isline) {
+            try stdout.print("{d}\n", .{cnt.line_cunt});
+        } else if (option.isword) {
+            try stdout.print("{d}\n", .{cnt.word_cunt});
+        } else if (option.ischar) {
+            try stdout.print("{d}\n", .{cnt.char_cunt});
+        } else if (option.isbyte) {
+            try stdout.print("{d}\n", .{cnt.byte_cunt});
         } else {
-            try stdout.print("{d}\t{d}\t{d}\t{d}\n", .{ line_cunt, word_cunt, char_cunt, byte_cunt });
+            try stdout.print("{d}\t{d}\t{d}\t{d}\n", .{ cnt.line_cunt, cnt.word_cunt, cnt.char_cunt, cnt.byte_cunt });
         }
     } else {
         for (fname.items, 0..) |item, i| {
-            byte_cunt = 0;
-            line_cunt = 0;
-            char_cunt = 0;
-            word_cunt = 0;
             const file = try fs.cwd().openFile(item, .{});
             defer file.close();
 
-            // -l -c -m
-            var buf: [2048]u8 = undefined;
-            while (true) {
-                const lne = try stdin.read(buf[0..]);
-                if (lne == 0) {
-                    break;
-                }
+            const cnt = try cuntchar(stdin);
 
-                const chr = try std.unicode.utf8CountCodepoints(buf[0..lne]);
-                for (buf[0..lne]) |char| {
-                    if (char == '\n') {
-                        line_cunt += 1;
-                    }
-                }
-                char_cunt += chr;
-                byte_cunt += lne;
+            line_cuntt += cnt.line_cunt;
+            char_cuntt += cnt.char_cunt;
+            byte_cuntt += cnt.byte_cunt;
+            word_cuntt += cnt.word_cunt;
 
-                // -w
-                var insideWord: bool = false;
-                for (buf[0..lne]) |char| {
-                    if (std.ascii.isWhitespace(char)) {
-                        insideWord = false;
-                    } else if (!insideWord) {
-                        insideWord = true;
-                        word_cunt += 1;
-                    }
-                }
-            }
-
-            line_cuntt += line_cunt;
-            char_cuntt += char_cunt;
-            byte_cuntt += byte_cunt;
-            word_cuntt += word_cunt;
-
-            if (isline) {
-                try stdout.print("{d}\t{s}\n", .{ line_cunt, item });
-            } else if (isword) {
-                try stdout.print("{d}\t{s}\n", .{ word_cunt, item });
-            } else if (ischar) {
-                try stdout.print("{d}\t{s}\n", .{ char_cunt, item });
-            } else if (isbyte) {
-                try stdout.print("{d}\t\t{s}\n", .{ byte_cunt, item });
+            if (option.isline) {
+                try stdout.print("{d}\n", .{cnt.line_cunt});
+            } else if (option.isword) {
+                try stdout.print("{d}\n", .{cnt.word_cunt});
+            } else if (option.ischar) {
+                try stdout.print("{d}\n", .{cnt.char_cunt});
+            } else if (option.isbyte) {
+                try stdout.print("{d}\n", .{cnt.byte_cunt});
             } else {
-                try stdout.print("{d}\t{d}\t{d}\t{d}\t\t{s}\n", .{ line_cunt, word_cunt, char_cunt, byte_cunt, item });
+                try stdout.print("{d}\t{d}\t{d}\t{d}\n", .{ cnt.line_cunt, cnt.word_cunt, cnt.char_cunt, cnt.byte_cunt });
             }
 
             if (i > 0) {
-                if (isline) {
+                if (option.isline) {
                     try stdout.print("{d}\t合計\n", .{line_cuntt});
-                } else if (isword) {
+                } else if (option.isword) {
                     try stdout.print("{d}\t合計\n", .{word_cuntt});
-                } else if (ischar) {
+                } else if (option.ischar) {
                     try stdout.print("{d}\t合計\n", .{char_cuntt});
-                } else if (isbyte) {
+                } else if (option.isbyte) {
                     try stdout.print("{d}\t\t合計\n", .{byte_cuntt});
                 } else {
                     try stdout.print("{d}\t{d}\t{d}\t{d}\t\t合計\n", .{ line_cuntt, word_cuntt, char_cuntt, byte_cuntt });
