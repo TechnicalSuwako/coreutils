@@ -20,6 +20,7 @@ fn help() !void {
     try stdout.print("表示は常に次の順です: 改行数、単語数、文字数、バイト数。\n", .{});
     try stdout.print("-c バイト数を表示する\n", .{});
     try stdout.print("-m 文字数を表示する\n", .{});
+    try stdout.print("-n ヘッダーを非表示にする\n", .{});
     try stdout.print("-l 改行の数を表示する\n", .{});
     try stdout.print("-w 単語数を表示する\n", .{});
     try stdout.print("-h ヘルプを表示\n", .{});
@@ -59,6 +60,7 @@ pub fn main() !void {
     var isline: bool = false;
     var ischar: bool = false;
     var isword: bool = false;
+    var isnhed: bool = false;
     var iAmWord: bool = false;
     var byte_cunt: usize = 0;
     var line_cunt: usize = 0;
@@ -81,6 +83,7 @@ pub fn main() !void {
         if (i == 'c') isbyte = true;
         if (i == 'l') isline = true;
         if (i == 'm') ischar = true;
+        if (i == 'n') isnhed = true;
         if (i == 'w') isword = true;
     }
 
@@ -88,16 +91,18 @@ pub fn main() !void {
     var bw = io.bufferedWriter(stdof);
     const stdout = bw.writer();
 
-    if (isline) {
-        try stdout.print("改行数\tファル名\n", .{});
-    } else if (isword) {
-        try stdout.print("単語数\tファル名\n", .{});
-    } else if (ischar) {
-        try stdout.print("文字数\tファル名\n", .{});
-    } else if (isbyte) {
-        try stdout.print("バイト数\tファル名\n", .{});
-    } else {
-        try stdout.print("改行数\t単語数\t文字数\tバイト数\tファル名\n", .{});
+    if (!isnhed) {
+        if (isline) {
+            try stdout.print("改行数\tファル名\n", .{});
+        } else if (isword) {
+            try stdout.print("単語数\tファル名\n", .{});
+        } else if (ischar) {
+            try stdout.print("文字数\tファル名\n", .{});
+        } else if (isbyte) {
+            try stdout.print("バイト数\tファル名\n", .{});
+        } else {
+            try stdout.print("改行数\t単語数\t文字数\tバイト数\tファル名\n", .{});
+        }
     }
 
     if (fname.items.len == 0) {
@@ -111,7 +116,11 @@ pub fn main() !void {
             }
 
             const chr = try std.unicode.utf8CountCodepoints(buf[0..lne]);
-            line_cunt += 1;
+            for (buf[0..lne]) |char| {
+                if (char == '\n') {
+                    line_cunt += 1;
+                }
+            }
             char_cunt += chr;
             byte_cunt += lne;
 
@@ -131,11 +140,11 @@ pub fn main() !void {
         if (isline) {
             try stdout.print("{d}\n", .{line_cunt});
         } else if (isword) {
-            try stdout.print("{d}\n", .{word_cuntt});
+            try stdout.print("{d}\n", .{word_cunt});
         } else if (ischar) {
-            try stdout.print("{d}n", .{char_cuntt});
+            try stdout.print("{d}\n", .{char_cunt});
         } else if (isbyte) {
-            try stdout.print("{d}n", .{byte_cuntt});
+            try stdout.print("{d}\n", .{byte_cunt});
         } else {
             try stdout.print("{d}\t{d}\t{d}\t{d}\n", .{ line_cunt, word_cunt, char_cunt, byte_cunt });
         }
@@ -178,11 +187,11 @@ pub fn main() !void {
             if (isline) {
                 try stdout.print("{d}\t{s}\n", .{ line_cunt, item });
             } else if (isword) {
-                try stdout.print("{d}\t{s}\n", .{ word_cuntt, item });
+                try stdout.print("{d}\t{s}\n", .{ word_cunt, item });
             } else if (ischar) {
-                try stdout.print("{d}\t{s}\n", .{ char_cuntt, item });
+                try stdout.print("{d}\t{s}\n", .{ char_cunt, item });
             } else if (isbyte) {
-                try stdout.print("{d}\t\t{s}\n", .{ byte_cuntt, item });
+                try stdout.print("{d}\t\t{s}\n", .{ byte_cunt, item });
             } else {
                 try stdout.print("{d}\t{d}\t{d}\t{d}\t\t{s}\n", .{ line_cunt, word_cunt, char_cunt, byte_cunt, item });
             }
