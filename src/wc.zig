@@ -178,8 +178,9 @@ pub fn main() !void {
         for (fname.items, 0..) |item, i| {
             const file = try fs.cwd().openFile(item, .{});
             defer file.close();
+            const fr = file.reader();
 
-            const cnt = try cuntchar(stdin);
+            const cnt = try cuntchar(fr);
 
             line_cuntt += cnt.line_cunt;
             char_cuntt += cnt.char_cunt;
