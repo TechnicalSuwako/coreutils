@@ -95,26 +95,36 @@ pub fn main() !void {
             if (stat.kind != .file) {
                 if (isrecur) {
                     if (ischeck) {
-                        try stdout.print("rm: ディレクトリ '{s}' を削除しますか?\n", .{item});
+                        try stdout.print("rm: '{s}' を削除しますか?\n", .{item});
                         try bw.flush();
-                        if (!(try condel())) continue;
+                        if (!(try condel())) {
+                            if (!isigout) {
+                                try stdout.print("rm: '{s}' を削除しませんでした。\n", .{item});
+                                try bw.flush();
+                            }
+                            continue;
+                        }
                     }
                     try fs.cwd().deleteTree(item);
                     if (!isigout) {
-                        try stdout.print("rm: ディレクトリ '{s}' を削除しました。\n", .{item});
+                        try stdout.print("rm: '{s}' を削除しました。\n", .{item});
                     }
                 } else {
                     try stdout.print("rm: '{s}' を削除できません: ディレクトリです\n", .{item});
                 }
             } else {
                 if (ischeck) {
-                    try stdout.print("rm: 通常ファイル '{s}' を削除しますか?\n", .{item});
+                    try stdout.print("rm: '{s}' を削除しますか?\n", .{item});
                     try bw.flush();
-                    if (!(try condel())) continue;
+                    if (!(try condel())) {
+                        try stdout.print("rm: '{s}' を削除しませんでした。\n", .{item});
+                        try bw.flush();
+                    }
+                    continue;
                 }
                 try fs.cwd().deleteFile(item);
                 if (!isigout) {
-                    try stdout.print("rm: ファイル '{s}' を削除しました。\n", .{item});
+                    try stdout.print("rm: '{s}' を削除しました。\n", .{item});
                 }
             }
 
@@ -138,7 +148,11 @@ fn condel() !bool {
     var ly: [1]u8 = [_]u8{'y'};
     var uy: [1]u8 = [_]u8{'Y'};
     if (input) |i| {
-        return (std.mem.eql(u8, i[0..1], &ly) or std.mem.eql(u8, i[0..1], &uy));
+        if (i.len == 1) {
+            return (std.mem.eql(u8, i[0..1], &ly) or std.mem.eql(u8, i[0..1], &uy));
+        } else {
+            return false;
+        }
     } else {
         return false;
     }
