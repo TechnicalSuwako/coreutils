@@ -105,7 +105,16 @@ pub fn main() !void {
                             continue;
                         }
                     }
-                    try fs.cwd().deleteTree(item);
+                    fs.cwd().deleteTree(item) catch |e| {
+                        switch (e) {
+                            error.AccessDenied => {
+                                try stdout.print("rm: 許可がありません。\n", .{});
+                                try bw.flush();
+                                return;
+                            },
+                            else => {},
+                        }
+                    };
                     if (!isigout) {
                         try stdout.print("rm: '{s}' を削除しました。\n", .{item});
                     }
